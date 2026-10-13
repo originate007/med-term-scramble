@@ -1,0 +1,438 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Med Term Scramble - Enhanced Online Multiplayer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  --bg: #f3f1f7; --surface: #ffffff; --surface-2: #ebe7f3; --fg: #1f1b2e; --muted: #655f7d;
+  --line: #d8d2e6; --hema: #4b2e83; --hema-fg: #ffffff; --eosin: #c93a73;
+  --good: #1b7f55; --warn: #a8670a; --bad: #c2304f;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14101e; --surface: #1e1930; --surface-2: #2a2342; --fg: #ece8f5; --muted: #a59ebd;
+    --line: #3a3156; --hema: #a88ff2; --hema-fg: #170f2a; --eosin: #f06b9a;
+    --good: #4fd09a; --warn: #f0b54a; --bad: #ff7d97; color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.5;
+  padding-inline: 16px; padding-block: 24px 48px;
+}
+main { max-width: 680px; margin-inline: auto; display: flex; flex-direction: column; gap: 20px; }
+h1, h2 { font-family: var(--font-display); margin: 0; text-wrap: balance; letter-spacing: -0.02em; line-height: 1.05; }
+h1 { font-size: clamp(2.4rem, 9vw, 3.4rem); font-weight: 800; }
+h2 { font-size: 1.6rem; font-weight: 800; }
+p { margin: 0; }
+.eyebrow { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--eosin); font-weight: 600; }
+.lede { color: var(--muted); max-width: 52ch; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.label { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+button { font: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--eosin); outline-offset: 2px; }
+.chip { background: var(--surface-2); color: var(--fg); border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px; font-weight: 500; font-size: 0.9rem; }
+.chip[aria-pressed="true"] { background: var(--hema); color: var(--hema-fg); border-color: var(--hema); }
+.btn { background: var(--hema); color: var(--hema-fg); border: 0; border-radius: 8px; padding: 12px 22px; font-weight: 600; font-size: 1rem; }
+.btn:hover { filter: brightness(1.08); }
+.btn.ghost { background: transparent; color: var(--fg); border: 1px solid var(--line); }
+.input-text { font-family: var(--font-mono); font-size: 1rem; padding: 10px 14px; background: var(--surface); color: var(--fg); border: 2px solid var(--line); border-radius: 8px; width: 100%; }
+
+/* HUD & Play Layout */
+.hud { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.hud .q { font-family: var(--font-mono); font-size: 0.9rem; color: var(--muted); }
+.tag { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; padding: 2px 8px; color: var(--hema); font-weight: 600; }
+.score { font-family: var(--font-display); font-weight: 800; font-size: 2rem; font-variant-numeric: tabular-nums; line-height: 1; }
+.score small { font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted); letter-spacing: 0.1em; margin-right: 8px; font-weight: 600; }
+.timer { display: flex; flex-direction: column; gap: 6px; }
+.timer-row { display: flex; justify-content: space-between; align-items: baseline; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.secs { font-size: 1.6rem; font-weight: 600; }
+.worth { font-size: 0.9rem; font-weight: 600; }
+.bar { position: relative; height: 12px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.fill { position: absolute; inset: 0; transform-origin: left center; background: var(--good); }
+.tiles { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-start; min-height: 3rem; }
+.tile {
+  font-family: var(--font-mono); font-weight: 600; font-size: clamp(1.15rem, 5.2vw, 1.7rem);
+  width: clamp(2rem, 8vw, 2.7rem); height: clamp(2.5rem, 10vw, 3.3rem); display: grid; place-items: center;
+  background: var(--surface); color: var(--hema); border: 1.5px solid var(--hema); border-radius: 6px;
+}
+.clue { color: var(--muted); border-left: 3px solid var(--eosin); padding: 2px 0 2px 12px; }
+.clue b { color: var(--fg); font-weight: 600; }
+.answer-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.answer-row input {
+  flex: 1 1 200px; min-width: 0; font-family: var(--font-mono); font-size: 1.3rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
+  background: var(--surface); color: var(--fg); border: 2px solid var(--line); border-radius: 8px; padding: 10px 14px;
+}
+.feedback { min-height: 1.5em; font-weight: 600; }
+.topbar { display: flex; justify-content: flex-end; }
+.theme-btn { background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; font-family: var(--font-mono); font-size: 0.8rem; font-weight: 600; }
+.review { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.review li { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+.pos { color: var(--good); } .neg { color: var(--bad); }
+
+/* Live Ticker panel */
+.ticker-box { background: var(--surface-2); border-radius: 6px; padding: 8px 12px; font-family: var(--font-mono); font-size: 0.85rem; display: flex; flex-direction: column; gap: 4px; max-height: 90px; overflow-y: auto; }
+</style>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, set, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+   const firebaseConfig = {
+    apiKey: "AIzaSyAGK_AeqkqFKcnpm3i-B2dlviixAz2RnjI",
+    authDomain: "med-term-scramble.firebaseapp.com",
+    projectId: "med-term-scramble",
+    storageBucket: "med-term-scramble.firebasestorage.app",
+    messagingSenderId: "19692201285",
+    appId: "1:19692201285:web:0e1eb74049e23963684a2c",
+    measurementId: "G-KQVGGJ7JDH"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  window.FB = { db, ref, set, get, update, onValue };
+</script>
+
+<main>
+  <div class="topbar"><button class="theme-btn" id="themeBtn" type="button">Theme: Auto</button></div>
+
+  <!-- SETUP SCREEN -->
+  <section id="setup" class="screen" style="display:flex;flex-direction:column;gap:20px">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <span class="eyebrow">Online Multiplayer + Live Ticker</span>
+      <h1>Med Term Scramble</h1>
+      <p class="lede">Choose your subject, room options, and challenge friends in real-time.</p>
+    </div>
+    <div class="panel">
+      <label class="label">Your Name</label>
+      <input id="playerName" class="input-text" type="text" placeholder="Display name" value="Student">
+
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+        <span class="label">Subject Filter</span>
+        <div class="chips" id="cats"></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span class="label">Question Count</span>
+        <div class="chips" id="counts"></div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:10px">
+        <button class="btn" id="createRoomBtn" type="button" style="flex:1">Create Room</button>
+      </div>
+      <div style="display:flex;gap:10px">
+        <input id="roomCodeInput" class="input-text" type="text" placeholder="Enter Room Code">
+        <button class="btn ghost" id="joinRoomBtn" type="button">Join Room</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOBBY WAITING ROOM -->
+  <section id="lobby" class="screen" hidden style="flex-direction:column;gap:20px">
+    <span class="eyebrow">Lobby</span>
+    <h2 id="displayRoomCode">Room: ----</h2>
+    <div class="panel">
+      <span class="label">Connected Players</span>
+      <ul id="lobbyPlayers" class="review"></ul>
+    </div>
+    <button class="btn" id="startOnlineGame" type="button" hidden>Start Match</button>
+    <p class="lede" id="waitingText">Waiting for room host to launch the game...</p>
+  </section>
+
+  <!-- PLAY SCREEN -->
+  <section id="play" class="screen" hidden style="flex-direction:column;gap:18px">
+    <div class="hud">
+      <div style="display:flex;gap:8px 10px;align-items:center">
+        <span class="q" id="qnum">Q 1 / 10</span>
+        <span class="tag" id="qcat">Anatomy</span>
+      </div>
+      <div class="score"><small>SCORE</small><span id="score">0</span></div>
+    </div>
+
+    <!-- Live Opponent Score Ticker -->
+    <div class="ticker-box" id="liveTicker">
+      <span style="font-size:0.75rem; color:var(--muted); font-weight:600;">LIVE OPPONENT TICKER</span>
+      <div id="tickerFeed">Match started! Good luck.</div>
+    </div>
+
+    <div class="timer">
+      <div class="timer-row"><span class="secs" id="secs">15.0</span><span class="worth" id="worth">+5 pts</span></div>
+      <div class="bar"><div class="fill" id="fill" style="width:100%"></div></div>
+    </div>
+    <div class="tiles" id="tiles"></div>
+    <p class="clue"><b>Clue:</b> <span id="clue"></span></p>
+
+    <form id="form" autocomplete="off" style="display:flex;flex-direction:column;gap:10px">
+      <div class="answer-row">
+        <input id="guess" type="text" autocapitalize="characters" placeholder="Type the term">
+        <button class="btn" type="submit">Check</button>
+      </div>
+      <span class="feedback" id="feedback"></span>
+    </form>
+  </section>
+
+  <!-- RESULTS SCREEN -->
+  <section id="results" class="screen" hidden style="flex-direction:column;gap:20px">
+    <span class="eyebrow">Match Completed</span>
+    <h2>Final Leaderboard</h2>
+    <div class="panel">
+      <ol id="finalLeaderboard" class="review"></ol>
+    </div>
+    <button class="btn" onclick="location.reload()">Main Menu</button>
+  </section>
+</main>
+
+<script>
+const TERMS = [
+  ['DIAPHRAGM', 'Anatomy', 'Dome-shaped muscle beneath the lungs that drives breathing'],
+  ['ESOPHAGUS', 'Anatomy', 'Muscular tube carrying food from the pharynx to the stomach'],
+  ['CEREBELLUM', 'Anatomy', 'Hindbrain region that coordinates balance and fine movement'],
+  ['HIPPOCAMPUS', 'Anatomy', 'Temporal lobe structure central to forming new memories'],
+  ['THALAMUS', 'Anatomy', 'Relay station that sends sensory signals on to the cortex'],
+  ['HOMEOSTASIS', 'Physiology', 'Maintenance of a stable internal environment'],
+  ['PERISTALSIS', 'Physiology', 'Wave-like contractions that move food along the gut'],
+  ['SYNAPSE', 'Physiology', 'Junction where one neuron communicates with another'],
+  ['GLYCOLYSIS', 'Biochemistry', 'Pathway that splits glucose into two pyruvate molecules'],
+  ['ENZYME', 'Biochemistry', 'Biological catalyst that lowers activation energy'],
+  ['NEPHRON', 'Physiology', 'Functional unit of the kidney'],
+  ['MITOCHONDRIA', 'Biochemistry', 'Organelles where oxidative phosphorylation produces ATP']
+];
+
+const $ = id => document.getElementById(id);
+let cfg = { cat: 'All', n: 5 };
+let currentRoom = null, myId = 'p_' + Math.random().toString(36).substring(2, 7), gameState = null;
+let timer = null, timeLeft = 15.0;
+
+// Setup category & count chips
+function setupChips(hostId, items, key) {
+  const host = $(hostId);
+  host.innerHTML = '';
+  items.forEach(it => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.textContent = it.label;
+    b.setAttribute('aria-pressed', String(cfg[key] === it.value));
+    b.addEventListener('click', () => {
+      cfg[key] = it.value;
+      Array.from(host.children).forEach((c, i) => c.setAttribute('aria-pressed', String(items[i].value === cfg[key])));
+    });
+    host.appendChild(b);
+  });
+}
+setupChips('cats', ['All', 'Anatomy', 'Physiology', 'Biochemistry'].map(v => ({ label: v, value: v })), 'cat');
+setupChips('counts', [5, 10, 15].map(v => ({ label: v + ' Qs', value: v })), 'n');
+
+// Audio Synthesizer (Web Audio API)
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(type) {
+  if (!audioCtx) return;
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  
+  if (type === 'correct') {
+    osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+  } else if (type === 'wrong') {
+    osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+    osc.frequency.setValueAtTime(150, audioCtx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+  }
+}
+
+function show(id) {
+  ['setup', 'lobby', 'play', 'results'].forEach(s => $(s).hidden = (s !== id));
+}
+
+// Create Room
+$('createRoomBtn').addEventListener('click', async () => {
+  const name = $('playerName').value.trim() || 'Host';
+  currentRoom = Math.random().toString(36).substring(2, 6).toUpperCase();
+  
+  const pool = TERMS.filter(t => cfg.cat === 'All' || t[1] === cfg.cat);
+  const selectedQuestions = pool.sort(() => Math.random() - 0.5).slice(0, cfg.n);
+
+  const roomRef = window.FB.ref(window.FB.db, 'rooms/' + currentRoom);
+  await window.FB.set(roomRef, {
+    host: myId,
+    status: 'lobby',
+    players: { [myId]: { name: name, score: 0, activity: 'Joined room' } },
+    questions: selectedQuestions,
+    currentIndex: 0
+  });
+
+  listenRoom();
+  $('displayRoomCode').textContent = 'Room Code: ' + currentRoom;
+  $('startOnlineGame').hidden = false;
+  $('waitingText').hidden = true;
+  show('lobby');
+});
+
+// Join Room
+$('joinRoomBtn').addEventListener('click', async () => {
+  const code = $('roomCodeInput').value.trim().toUpperCase();
+  const name = $('playerName').value.trim() || 'Player';
+  if (!code) return alert('Enter a room code');
+
+  const roomRef = window.FB.ref(window.FB.db, 'rooms/' + code);
+  const snap = await window.FB.get(roomRef);
+  if (!snap.exists()) return alert('Room code not found.');
+
+  currentRoom = code;
+  await window.FB.update(window.FB.ref(window.FB.db, `rooms/${code}/players/${myId}`), {
+    name: name, score: 0, activity: 'Joined room'
+  });
+
+  listenRoom();
+  $('displayRoomCode').textContent = 'Room Code: ' + currentRoom;
+  show('lobby');
+});
+
+function listenRoom() {
+  window.FB.onValue(window.FB.ref(window.FB.db, 'rooms/' + currentRoom), (snapshot) => {
+    const data = snapshot.val();
+    if (!data) return;
+    gameState = data;
+
+    if (data.status === 'lobby') {
+      const list = $('lobbyPlayers');
+      list.innerHTML = '';
+      Object.values(data.players || {}).forEach(p => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span>${p.name}</span><span class="pos">Ready</span>`;
+        list.appendChild(li);
+      });
+    } else if (data.status === 'playing') {
+      show('play');
+      loadQuestion();
+    } else if (data.status === 'ended') {
+      show('results');
+      renderLeaderboard(data.players);
+    }
+  });
+}
+
+$('startOnlineGame').addEventListener('click', async () => {
+  await window.FB.update(window.FB.ref(window.FB.db, 'rooms/' + currentRoom), { status: 'playing' });
+});
+
+function loadQuestion() {
+  clearInterval(timer);
+  const q = gameState.questions[gameState.currentIndex];
+  if (!q) {
+    if (gameState.host === myId) {
+      window.FB.update(window.FB.ref(window.FB.db, 'rooms/' + currentRoom), { status: 'ended' });
+    }
+    return;
+  }
+
+  $('qnum').textContent = `Q ${gameState.currentIndex + 1} / ${gameState.questions.length}`;
+  $('qcat').textContent = q[1];$('clue').textContent = q[2];
+
+  const tiles = $('tiles');
+  tiles.innerHTML = '';
+  q[0].split('').sort(() => Math.random() - 0.5).forEach(ch => {
+    const s = document.createElement('span'); s.className = 'tile'; s.textContent = ch;
+    tiles.appendChild(s);
+  });
+
+  $('guess').value = '';$('guess').disabled = false;
+  $('feedback').textContent = '';
+
+  // 15 sec timer per question
+  timeLeft = 15.0;
+  timer = setInterval(() => {
+    timeLeft -= 0.1;
+    $('secs').textContent = Math.max(0, timeLeft).toFixed(1);$('fill').style.width = (Math.max(0, timeLeft) / 15 * 100) + '%';
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      $('guess').disabled = true;
+      $('feedback').textContent = "Time's up!";
+    }
+  }, 100);
+}
+
+// Live Ticker updates feed from all players
+function updateTickerFeed(players) {
+  const feed = $('tickerFeed');
+  feed.innerHTML = '';
+  Object.values(players).forEach(p => {
+    const div = document.createElement('div');
+    div.textContent = `⚡ ${p.name}: ${p.score} pts (${p.activity || 'playing'})`;
+    feed.appendChild(div);
+  });
+}
+
+$('form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const guess = $('guess').value.trim().toUpperCase();
+  const q = gameState.questions[gameState.currentIndex];
+
+  if (guess === q[0]) {
+    clearInterval(timer);
+    $('guess').disabled = true;
+    playSound('correct');
+    $('feedback').textContent = 'Correct! +5 pts';$('feedback').style.color = 'var(--good)';
+
+    const curScore = gameState.players[myId].score || 0;
+    const myName = gameState.players[myId].name;
+    
+    await window.FB.update(window.FB.ref(window.FB.db, `rooms/${currentRoom}/players/${myId}`), {
+      score: curScore + 5,
+      activity: 'Solved Q' + (gameState.currentIndex + 1)
+    });
+
+    // Advance question as host
+    setTimeout(async () => {
+      if (gameState.host === myId) {
+        const nextIdx = gameState.currentIndex + 1;
+        if (nextIdx < gameState.questions.length) {
+          await window.FB.update(window.FB.ref(window.FB.db, `rooms/${currentRoom}`), { currentIndex: nextIdx });
+        } else {
+          await window.FB.update(window.FB.ref(window.FB.db, `rooms/${currentRoom}`), { status: 'ended' });
+        }
+      }
+    }, 1200);
+  } else {
+    playSound('wrong');
+    $('feedback').textContent = 'Incorrect, try again!';$('feedback').style.color = 'var(--bad)';
+  }
+});
+
+// Update ticker whenever Firebase players update
+window.FB.onValue(window.FB.ref(window.FB.db, 'rooms/'), () => {
+  if (gameState && gameState.players) updateTickerFeed(gameState.players);
+});
+
+function renderLeaderboard(players) {
+  const lb = $('finalLeaderboard');
+  lb.innerHTML = '';
+  Object.values(players).sort((a, b) => b.score - a.score).forEach((p, idx) => {
+    const li = document.createElement('li');
+    li.innerHTML = `<span>#${idx + 1} ${p.name}</span><span class="pos">${p.score} pts</span>`;
+    lb.appendChild(li);
+  });
+}
+
+// Theme handling
+let mode = 'auto';
+$('themeBtn').addEventListener('click', () => {
+  mode = mode === 'auto' ? 'dark' : (mode === 'dark' ? 'light' : 'auto');
+  if (mode === 'auto') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', mode);
+  $('themeBtn').textContent = 'Theme: ' + mode.charAt(0).toUpperCase() + mode.slice(1);
+});
+</script>
+
+</body></html>
