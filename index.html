@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>Med Term Scramble - Enhanced Online Multiplayer</title>
+<title>Med Term Scramble - Online Multiplayer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
@@ -69,13 +69,12 @@ button { font: inherit; cursor: pointer; }
   background: var(--surface); color: var(--fg); border: 2px solid var(--line); border-radius: 8px; padding: 10px 14px;
 }
 .feedback { min-height: 1.5em; font-weight: 600; }
-.topbar { display: flex; justify-content: flex-end; }
-.theme-btn { background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; font-family: var(--font-mono); font-size: 0.8rem; font-weight: 600; }
+.topbar { display: flex; justify-content: space-between; align-items: center; }
+.theme-btn, .nav-btn { background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; font-family: var(--font-mono); font-size: 0.8rem; }
 .review { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .review li { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 10px 0; border-top: 1px solid var(--line); }
 .pos { color: var(--good); } .neg { color: var(--bad); }
 
-/* Live Ticker panel */
 .ticker-box { background: var(--surface-2); border-radius: 6px; padding: 8px 12px; font-family: var(--font-mono); font-size: 0.85rem; display: flex; flex-direction: column; gap: 4px; max-height: 90px; overflow-y: auto; }
 </style>
 
@@ -84,7 +83,7 @@ button { font: inherit; cursor: pointer; }
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getDatabase, ref, set, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-   const firebaseConfig = {
+  const firebaseConfig = {
     apiKey: "AIzaSyAGK_AeqkqFKcnpm3i-B2dlviixAz2RnjI",
     authDomain: "med-term-scramble.firebaseapp.com",
     projectId: "med-term-scramble",
@@ -100,12 +99,16 @@ button { font: inherit; cursor: pointer; }
 </script>
 
 <main>
-  <div class="topbar"><button class="theme-btn" id="themeBtn" type="button">Theme: Auto</button></div>
+  <!-- TOP BAR WITH BACK BUTTON & THEME TOGGLE -->
+  <div class="topbar">
+    <button class="nav-btn" id="backBtn" type="button" hidden>← Back to Setup</button>
+    <button class="theme-btn" id="themeBtn" type="button" style="margin-left:auto">Theme: Auto</button>
+  </div>
 
   <!-- SETUP SCREEN -->
   <section id="setup" class="screen" style="display:flex;flex-direction:column;gap:20px">
     <div style="display:flex;flex-direction:column;gap:10px">
-      <span class="eyebrow">Online Multiplayer + Live Ticker</span>
+      <span class="eyebrow">Online Multiplayer + Navigation</span>
       <h1>Med Term Scramble</h1>
       <p class="lede">Choose your subject, room options, and challenge friends in real-time.</p>
     </div>
@@ -155,7 +158,6 @@ button { font: inherit; cursor: pointer; }
       <div class="score"><small>SCORE</small><span id="score">0</span></div>
     </div>
 
-    <!-- Live Opponent Score Ticker -->
     <div class="ticker-box" id="liveTicker">
       <span style="font-size:0.75rem; color:var(--muted); font-weight:600;">LIVE OPPONENT TICKER</span>
       <div id="tickerFeed">Match started! Good luck.</div>
@@ -184,7 +186,7 @@ button { font: inherit; cursor: pointer; }
     <div class="panel">
       <ol id="finalLeaderboard" class="review"></ol>
     </div>
-    <button class="btn" onclick="location.reload()">Main Menu</button>
+    <button class="btn" id="returnMenuBtn">Main Menu</button>
   </section>
 </main>
 
@@ -209,7 +211,6 @@ let cfg = { cat: 'All', n: 5 };
 let currentRoom = null, myId = 'p_' + Math.random().toString(36).substring(2, 7), gameState = null;
 let timer = null, timeLeft = 15.0;
 
-// Setup category & count chips
 function setupChips(hostId, items, key) {
   const host = $(hostId);
   host.innerHTML = '';
@@ -227,7 +228,6 @@ function setupChips(hostId, items, key) {
 setupChips('cats', ['All', 'Anatomy', 'Physiology', 'Biochemistry'].map(v => ({ label: v, value: v })), 'cat');
 setupChips('counts', [5, 10, 15].map(v => ({ label: v + ' Qs', value: v })), 'n');
 
-// Audio Synthesizer (Web Audio API)
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function playSound(type) {
   if (!audioCtx) return;
@@ -253,7 +253,24 @@ function playSound(type) {
 
 function show(id) {
   ['setup', 'lobby', 'play', 'results'].forEach(s => $(s).hidden = (s !== id));
+  // Show back button only when not on setup screen
+  $('backBtn').hidden = (id === 'setup');
 }
+
+// Back Button Navigation Handler
+$('backBtn').addEventListener('click', () => {
+  if (confirm('Are you sure you want to leave the room and return to setup?')) {
+    clearInterval(timer);
+    currentRoom = null;
+    show('setup');
+  }
+});
+
+$('returnMenuBtn').addEventListener('click', () => {
+  clearInterval(timer);
+  currentRoom = null;
+  show('setup');
+});
 
 // Create Room
 $('createRoomBtn').addEventListener('click', async () => {
@@ -350,7 +367,6 @@ function loadQuestion() {
   $('guess').value = '';$('guess').disabled = false;
   $('feedback').textContent = '';
 
-  // 15 sec timer per question
   timeLeft = 15.0;
   timer = setInterval(() => {
     timeLeft -= 0.1;
@@ -363,7 +379,6 @@ function loadQuestion() {
   }, 100);
 }
 
-// Live Ticker updates feed from all players
 function updateTickerFeed(players) {
   const feed = $('tickerFeed');
   feed.innerHTML = '';
@@ -386,14 +401,12 @@ $('form').addEventListener('submit', async (e) => {
     $('feedback').textContent = 'Correct! +5 pts';$('feedback').style.color = 'var(--good)';
 
     const curScore = gameState.players[myId].score || 0;
-    const myName = gameState.players[myId].name;
     
     await window.FB.update(window.FB.ref(window.FB.db, `rooms/${currentRoom}/players/${myId}`), {
       score: curScore + 5,
       activity: 'Solved Q' + (gameState.currentIndex + 1)
     });
 
-    // Advance question as host
     setTimeout(async () => {
       if (gameState.host === myId) {
         const nextIdx = gameState.currentIndex + 1;
@@ -410,7 +423,6 @@ $('form').addEventListener('submit', async (e) => {
   }
 });
 
-// Update ticker whenever Firebase players update
 window.FB.onValue(window.FB.ref(window.FB.db, 'rooms/'), () => {
   if (gameState && gameState.players) updateTickerFeed(gameState.players);
 });
@@ -425,7 +437,6 @@ function renderLeaderboard(players) {
   });
 }
 
-// Theme handling
 let mode = 'auto';
 $('themeBtn').addEventListener('click', () => {
   mode = mode === 'auto' ? 'dark' : (mode === 'dark' ? 'light' : 'auto');
